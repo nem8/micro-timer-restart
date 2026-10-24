@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#2196f3</color>
-    <color name="primary_variant">#005cbc</color>
+    <!-- accent colours, shared by light and dark mode -->
+    <color name="primary">#5B5BD6</color>          <!-- indigo: restart -->
+    <color name="primary_variant">#4848B8</color>
     <color name="text_on_primary">#ffffff</color>
-    <color name="action">#4caf50</color>
-    <color name="delete">#e91e1e</color>
+    <color name="action">#12936A</color>           <!-- green: start, pause, resume -->
+    <color name="delete">#E5484D</color>           <!-- red: delete -->
+    <color name="disabled">#9AA0AE</color>
+    <color name="expired">#E5484D</color>          <!-- expired time text -->
+    <color name="expired_bg">#24E5484D</color>     <!-- ~14% red wash behind an expired row -->
 
-    <dimen name="button_margin">2.5dp</dimen>
+    <dimen name="button_margin">3dp</dimen>
     <dimen name="icon_button_size">48dp</dimen>
     <dimen name="text_size">28sp</dimen>
 
     <style name="Button">
         <item name="android:background">@drawable/btn_selector</item>
         <item name="android:layout_margin">@dimen/button_margin</item>
+        <!-- flat buttons, no drop shadow -->
+        <item name="android:stateListAnimator">@null</item>
     </style>
 
     <style name="PadButton" parent="Button">
@@ -21,8 +27,8 @@
         <item name="android:layout_weight">1</item>
     </style>
     <style name="NumberButton" parent="PadButton">
-        <item name="android:backgroundTint">@color/primary</item>
-        <item name="android:textColor">@color/text_on_primary</item>
+        <item name="android:backgroundTint">@color/key</item>
+        <item name="android:textColor">@color/key_text</item>
         <item name="android:textSize">@dimen/text_size</item>
     </style>
 </resources>

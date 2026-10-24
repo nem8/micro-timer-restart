@@ -36,6 +36,11 @@ class AlarmReceiver : BroadcastReceiver() {
         val noteMgr = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val id = intent.getLongExtra("id", -1)
         val name = intent.getStringExtra("name")
+        val label = intent.getStringExtra("label")
+        val text = if (label.isNullOrBlank())
+            "Timer for $name Expired!"
+        else
+            "$label ($name) Expired!"
 
         val noteIntent = PendingIntent.getActivity(
             context,
@@ -50,7 +55,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle(context.getString(R.string.app_name))
-            .setContentText("Timer for $name Expired!")
+            .setContentText(text)
             .setCategory(Notification.CATEGORY_ALARM)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setColor(Color.RED)

@@ -13,8 +13,8 @@ android {
         // work around unused library resources
         resourceConfigurations.addAll(listOf("anydpi", "en"))
         targetSdk = 34
-        versionCode = 10
-        versionName = "1.9-restart"
+        versionCode = 11
+        versionName = "1.9-plus"
         applicationIdSuffix = ".restart"
     }
 

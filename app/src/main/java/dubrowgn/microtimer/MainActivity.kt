@@ -127,6 +127,7 @@ class MainActivity : Activity() {
     private fun initDb() {
         alarmDao = Room.databaseBuilder(applicationContext, Database::class.java, "app-data")
             .allowMainThreadQueries()
+            .addMigrations(Database.MIGRATION_1_2)
             .build()
             .AlarmDao()
     }
@@ -258,6 +259,14 @@ class MainActivity : Activity() {
             }
         }
 
+        tc.onRename = { name ->
+            debug("tc.onRename(${tc.alarm.id})")
+
+            alarm.name = name
+            alarmDao.update(alarm)
+            tc.update()
+        }
+
         tc.onRestart = {
             debug("tc.onRestart(${tc.alarm.id}); expired:${alarm.expired}, expiredCount:$expiredCount")
 
@@ -291,7 +300,10 @@ class MainActivity : Activity() {
 
             debug("alarm ${tc.alarm.id} expired; expiredCount:$expiredCount")
 
-            if (expiredCount == 1)
+            // Vibrate only when the timer has just run out. Reopening the app
+            // to a timer that expired a while ago (and already vibrated via
+            // the background alarm) should just show it, not buzz again.
+            if (tc.alarm.justExpired())
                 Vibration.start(this)
 
             return
@@ -355,6 +367,7 @@ class MainActivity : Activity() {
                 action = "dubrowgn.microtimer.ALARM_EXPIRED"
                 putExtra("id", alarm.id)
                 putExtra("name", alarm.duration.toString())
+                putExtra("label", alarm.name)
                 flags = 0
             },
             PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,

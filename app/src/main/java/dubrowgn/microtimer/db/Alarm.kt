@@ -21,6 +21,10 @@ data class Alarm (
     @ColumnInfo(name = "expires_ms")
     var expiresMs: Long? = null
 
+    // optional user-given label, e.g. "Pasta"
+    @ColumnInfo(name = "name")
+    var name: String? = null
+
     val expired: Boolean
         get() = remaining.isZero
 
@@ -45,6 +49,12 @@ data class Alarm (
     fun unpause(): Alarm {
         expiresMs = SystemClock.elapsedRealtime() + remaining.totalSeconds.toLong() * 1000
         return this
+    }
+
+    // true if the timer ran out within the last couple of seconds
+    fun justExpired(nowMs: Long = SystemClock.elapsedRealtime()): Boolean {
+        val expiresMs = this.expiresMs ?: return false
+        return expired && nowMs - expiresMs < 2000
     }
 
     fun restart(): Alarm {
