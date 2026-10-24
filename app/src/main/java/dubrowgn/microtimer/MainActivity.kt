@@ -90,7 +90,7 @@ class MainActivity : Activity() {
                     "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}), ${Build.MANUFACTURER} ${Build.MODEL}\n\n" +
                     sw.toString()
                 )
-            } catch (_: Throwable) {
+            } catch (ignored: Throwable) {
             }
             previous?.uncaughtException(thread, ex)
         }
