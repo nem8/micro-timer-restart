@@ -1,6 +1,7 @@
 package dubrowgn.microtimer
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.View
@@ -12,6 +13,7 @@ import dubrowgn.microtimer.ui.ext.*
 class RoTimeControl : FrameLayout {
 
     private lateinit var lblValue: TextView
+    private lateinit var defaultColors: ColorStateList
 
     fun setValue(dur: Dec6Duration?): RoTimeControl {
         lblValue.text = dur?.toString() ?: ""
@@ -20,6 +22,11 @@ class RoTimeControl : FrameLayout {
 
     fun setColor(color: Int): RoTimeControl {
         lblValue.setTextColor(color)
+        return this
+    }
+
+    fun resetColor(): RoTimeControl {
+        lblValue.setTextColor(defaultColors)
         return this
     }
 
@@ -49,6 +56,7 @@ class RoTimeControl : FrameLayout {
             .withTextSize(40f)
             .withTextAlign(View.TEXT_ALIGNMENT_CENTER)
             .withTypeface(Typeface.MONOSPACE)
+        defaultColors = lblValue.textColors
         addView(lblValue)
     }
 }

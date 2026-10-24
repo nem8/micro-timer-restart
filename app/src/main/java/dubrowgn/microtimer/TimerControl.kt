@@ -12,10 +12,15 @@ class TimerControl(context: Context, val alarm: Alarm) : LinearLayout(context) {
     var onDelete: (() -> Unit)? = null
     var onPause: (() -> Unit)? = null
     var onResume: (() -> Unit)? = null
+    var onRestart: (() -> Unit)? = null
 
     private var paused: Boolean = false
+    private var showingExpired: Boolean = false
+
+    private val actColor: Int
 
     private val lblValue: RoTimeControl
+    private val btnRestart: Button
     private val btnPause: Button
     private val btnResume: Button
 
@@ -27,6 +32,7 @@ class TimerControl(context: Context, val alarm: Alarm) : LinearLayout(context) {
         orientation = HORIZONTAL
 
         val icoDelete = context.getDrawable(R.drawable.ico_delete)
+        val icoRestart = context.getDrawable(R.drawable.ico_restart)
         val icoPlay = context.getDrawable(R.drawable.ico_play)
         val icoPause = context.getDrawable(R.drawable.ico_pause)
 
@@ -34,8 +40,9 @@ class TimerControl(context: Context, val alarm: Alarm) : LinearLayout(context) {
         val btnMarginPx = resources.getDimension(R.dimen.button_margin).toInt()
 
         val fgColor = context.getColor(R.color.text_on_primary)
-        val actColor = context.getColor(R.color.action)
         val delColor = context.getColor(R.color.delete)
+        val rstColor = context.getColor(R.color.primary)
+        actColor = context.getColor(R.color.action)
 
         val lp = LayoutParams(btnSizePx, btnSizePx)
             .withMargins(btnMarginPx)
@@ -53,6 +60,17 @@ class TimerControl(context: Context, val alarm: Alarm) : LinearLayout(context) {
         lblValue = RoTimeControl(context)
             .withLayout(0, matchParent, 1f)
         addView(lblValue)
+
+        btnRestart = Button(context)
+            .withLayout(LayoutParams(lp))
+            .withBg(context.getDrawable(R.drawable.btn_selector))
+            .withBgTint(rstColor)
+            .withFgTint(fgColor)
+            .withFg(icoRestart)
+            .withFgGravity(Gravity.CENTER)
+            .withOnClick { onRestart?.invoke() }
+        btnRestart.contentDescription = "Restart"
+        addView(btnRestart)
 
         btnPause = Button(context)
             .withLayout(LayoutParams(lp))
@@ -77,16 +95,27 @@ class TimerControl(context: Context, val alarm: Alarm) : LinearLayout(context) {
 
     fun update(): TimerControl {
         lblValue.setValue(alarm.remaining)
-        if (alarm.remaining.digits == 0u) {
+
+        val expired = alarm.remaining.digits == 0u
+        if (expired && !showingExpired) {
             lblValue.setColor(Color.RED)
             btnPause
                 .withEnabled(false)
                 .withBgTint(Color.GRAY)
+            showingExpired = true
+        } else if (!expired && showingExpired) {
+            // timer was restarted after expiring; undo the expired look
+            lblValue.resetColor()
+            btnPause
+                .withEnabled(true)
+                .withBgTint(actColor)
+            showingExpired = false
         }
 
         if (paused == alarm.paused)
             return this
 
+        // pause/resume is always the last view in the row
         if (alarm.paused) {
             removeView(btnPause)
             addView(btnResume)

@@ -14,7 +14,8 @@ android {
         resourceConfigurations.addAll(listOf("anydpi", "en"))
         targetSdk = 34
         versionCode = 9
-        versionName = "1.9"
+        versionName = "1.9-restart"
+        applicationIdSuffix = ".restart"
     }
 
     buildTypes {

@@ -210,6 +210,23 @@ class MainActivity : Activity() {
             }
         }
 
+        tc.onRestart = {
+            debug("tc.onRestart(${tc.alarm.id}); expired:${alarm.expired}, expiredCount:$expiredCount")
+
+            tickHandler.removeCallbacksAndMessages(alarm.id)
+
+            if (alarm.expired) {
+                expiredCount--
+                if (expiredCount == 0)
+                    Vibration.stop(this)
+                noteMgr.cancel(alarm.id!!.toInt())
+            }
+
+            alarm.restart()
+            alarmDao.update(alarm)
+            tick(tc)
+        }
+
         layoutAlarms.addView(tc)
 
         return tc

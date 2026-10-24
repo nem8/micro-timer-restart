@@ -47,6 +47,11 @@ data class Alarm (
         return this
     }
 
+    fun restart(): Alarm {
+        remaining = duration.clone()
+        return unpause()
+    }
+
     fun update(): Long? {
         val expiresMs = this.expiresMs ?: return null
 
