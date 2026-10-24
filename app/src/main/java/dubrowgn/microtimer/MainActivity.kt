@@ -72,9 +72,10 @@ class MainActivity : Activity() {
 
         allowFullscreen()
 
-        loadAlarms()
-
-        showLastCrash()
+        // if the last run crashed, show the error instead of loading saved
+        // timers (which may be what crashes)
+        if (!showLastCrash())
+            loadAlarms()
     }
 
     // Write any uncaught exception to a file so it can be shown on next launch.
@@ -96,10 +97,10 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun showLastCrash() {
+    private fun showLastCrash(): Boolean {
         val crashFile = java.io.File(filesDir, "last-crash.txt")
         if (!crashFile.exists())
-            return
+            return false
 
         val text = crashFile.readText()
         crashFile.delete()
@@ -113,6 +114,8 @@ class MainActivity : Activity() {
             }
             .setNegativeButton("Close", null)
             .show()
+
+        return true
     }
 
     override fun onDestroy() {
