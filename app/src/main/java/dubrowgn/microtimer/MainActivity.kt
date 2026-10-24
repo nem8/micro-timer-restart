@@ -3,10 +3,13 @@ package dubrowgn.microtimer
 import android.Manifest.permission
 import android.app.Activity
 import android.app.AlarmManager
+import android.app.AlertDialog
 import android.app.KeyguardManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -60,6 +63,8 @@ class MainActivity : Activity() {
 
         super.onCreate(savedInstanceState)
 
+        installCrashLogger()
+
         initDb()
         initPerms()
         initNotes()
@@ -68,6 +73,46 @@ class MainActivity : Activity() {
         allowFullscreen()
 
         loadAlarms()
+
+        showLastCrash()
+    }
+
+    // Write any uncaught exception to a file so it can be shown on next launch.
+    private fun installCrashLogger() {
+        val crashFile = java.io.File(filesDir, "last-crash.txt")
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, ex ->
+            try {
+                val sw = java.io.StringWriter()
+                ex.printStackTrace(java.io.PrintWriter(sw))
+                crashFile.writeText(
+                    "Micro Timer+ ${packageManager.getPackageInfo(packageName, 0).versionName}\n" +
+                    "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}), ${Build.MANUFACTURER} ${Build.MODEL}\n\n" +
+                    sw.toString()
+                )
+            } catch (_: Throwable) {
+            }
+            previous?.uncaughtException(thread, ex)
+        }
+    }
+
+    private fun showLastCrash() {
+        val crashFile = java.io.File(filesDir, "last-crash.txt")
+        if (!crashFile.exists())
+            return
+
+        val text = crashFile.readText()
+        crashFile.delete()
+
+        AlertDialog.Builder(this)
+            .setTitle("Last crash")
+            .setMessage(text)
+            .setPositiveButton("Copy") { _, _ ->
+                val clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clip.setPrimaryClip(ClipData.newPlainText("crash", text))
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     override fun onDestroy() {
