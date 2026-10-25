@@ -24,6 +24,7 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.core.view.children
 import androidx.room.Room
 import dubrowgn.microtimer.db.Alarm
@@ -41,6 +42,7 @@ class MainActivity : Activity() {
 
     private lateinit var layoutAlarms: LinearLayout
     private lateinit var lblValue: RoTimeControl
+    private lateinit var stopwatch: StopwatchControl
 
     private val alarmMgr
         get() = getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -58,6 +60,17 @@ class MainActivity : Activity() {
         Log.e(this::class.java.name, msg)
     }
 
+    // apply the in-app light/dark choice before any resources are loaded
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(ThemePref.wrap(newBase))
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // keep a half-typed time when the activity is recreated (theme switch)
+        outState.putInt("input_digits", duration.digits.toInt())
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         debug("onCreate()")
 
@@ -69,6 +82,13 @@ class MainActivity : Activity() {
         initPerms()
         initNotes()
         initUi()
+
+        savedInstanceState?.getInt("input_digits", 0)?.let { digits ->
+            if (digits > 0) {
+                duration = Dec6Duration(digits.toUInt())
+                lblValue.setValue(duration)
+            }
+        }
 
         allowFullscreen()
 
@@ -195,6 +215,15 @@ class MainActivity : Activity() {
 
         layoutAlarms = findViewById(R.id.layoutAlarms)
         lblValue = findViewById(R.id.lblInput)
+        lblValue.setTextSizeSp(32f)
+
+        stopwatch = StopwatchControl(this)
+        stopwatch.onConvert = { dur -> createTimer(dur) }
+        stopwatch.onThemeToggle = {
+            Toast.makeText(this, ThemePref.cycle(this), Toast.LENGTH_SHORT).show()
+            recreate()
+        }
+        findViewById<LinearLayout>(R.id.layoutStopwatch).addView(stopwatch)
 
         findViewById<Button>(R.id.btn0).setOnClickListener { onDigit(0u) }
         findViewById<Button>(R.id.btn1).setOnClickListener { onDigit(1u) }
@@ -209,7 +238,7 @@ class MainActivity : Activity() {
         findViewById<Button>(R.id.btn00).setOnClickListener { onDigit(0u); onDigit(0u) }
         findViewById<Button>(R.id.btnBackspace).setOnClickListener { onBackspace() }
         findViewById<Button>(R.id.btnClear).setOnClickListener { onClear() }
-        findViewById<Button>(R.id.btnStart).setOnClickListener { createTimer() }
+        findViewById<Button>(R.id.btnStart).setOnClickListener { createTimerFromInput() }
     }
 
     private fun loadAlarms() {
@@ -289,7 +318,10 @@ class MainActivity : Activity() {
         return tc
     }
 
-    private fun tick(tc: TimerControl) {
+    // allowVibrate is false for the catch-up tick when the app is (re)opened,
+    // so opening the app to an already-expired timer never vibrates.
+    private fun tick(tc: TimerControl, allowVibrate: Boolean = true) {
+        val wasExpired = tc.alarm.expired
         val deltaMs = tc.alarm.update()
         tc.update()
 
@@ -303,7 +335,7 @@ class MainActivity : Activity() {
             // Vibrate only when the timer has just run out. Reopening the app
             // to a timer that expired a while ago (and already vibrated via
             // the background alarm) should just show it, not buzz again.
-            if (tc.alarm.justExpired())
+            if (allowVibrate && !wasExpired && tc.alarm.justExpired())
                 Vibration.start(this)
 
             return
@@ -320,11 +352,17 @@ class MainActivity : Activity() {
 
         super.onResume()
 
+        // Opening the app counts as having noticed: stop any vibration the
+        // background alarm started. Only timers that run out while the app is
+        // open will vibrate from here on.
+        Vibration.stop(this)
+        stopwatch.resume()
+
         expiredCount = 0
         layoutAlarms.children.forEach { v ->
             val tc = v as TimerControl
             cancelAlarmTimeout(tc.alarm)
-            tick(tc)
+            tick(tc, allowVibrate = false)
         }
     }
 
@@ -332,6 +370,8 @@ class MainActivity : Activity() {
         debug("onPause()")
 
         super.onPause()
+
+        stopwatch.pause()
 
         layoutAlarms.children.forEach { v ->
             val tc = v as TimerControl
@@ -393,17 +433,24 @@ class MainActivity : Activity() {
         alarmMgr.cancel(createAlarmIntent(alarm))
     }
 
-    private fun createTimer() {
-        debug("createTimer()")
+    private fun createTimerFromInput() {
+        debug("createTimerFromInput()")
 
         if (duration.isZero)
             return
 
-        val remaining = duration.clone()
-        val alarm = alarmDao.create(remaining)
+        createTimer(duration.clone())
+        onClear()
+    }
+
+    private fun createTimer(dur: Dec6Duration) {
+        debug("createTimer($dur)")
+
+        if (dur.isZero)
+            return
+
+        val alarm = alarmDao.create(dur)
         val tc = attachAlarm(alarm)
         tick(tc)
-
-        onClear()
     }
 }

@@ -5,7 +5,7 @@
     <color name="ripple">#1F1A1D24</color>
     <color name="key">#E6E9F2</color>
     <color name="key_text">#1A1D24</color>
-    <style name="Theme.MicroTimer" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+    <style name="Theme.MicroTimer" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@color/background</item>
         <item name="android:navigationBarColor">@color/background</item>
         <item name="android:windowLightStatusBar">true</item>

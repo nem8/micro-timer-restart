@@ -25,6 +25,11 @@ class RoTimeControl : FrameLayout {
         return this
     }
 
+    fun setTextSizeSp(sp: Float): RoTimeControl {
+        lblValue.textSize = sp
+        return this
+    }
+
     fun resetColor(): RoTimeControl {
         lblValue.setTextColor(defaultColors)
         return this

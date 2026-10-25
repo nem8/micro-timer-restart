@@ -54,7 +54,8 @@ data class Alarm (
     // true if the timer ran out within the last couple of seconds
     fun justExpired(nowMs: Long = SystemClock.elapsedRealtime()): Boolean {
         val expiresMs = this.expiresMs ?: return false
-        return expired && nowMs - expiresMs < 2000
+        // negative after a reboot (clock restarted); treat as old news
+        return expired && nowMs - expiresMs in 0..1999
     }
 
     fun restart(): Alarm {

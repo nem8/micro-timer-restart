@@ -12,7 +12,8 @@
 
     <dimen name="button_margin">3dp</dimen>
     <dimen name="icon_button_size">48dp</dimen>
-    <dimen name="text_size">28sp</dimen>
+    <dimen name="text_size">24sp</dimen>
+    <dimen name="key_height">52dp</dimen>
 
     <style name="Button">
         <item name="android:background">@drawable/btn_selector</item>

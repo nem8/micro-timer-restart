@@ -13,12 +13,31 @@ android {
         // work around unused library resources
         resourceConfigurations.addAll(listOf("anydpi", "en"))
         targetSdk = 34
-        versionCode = 11
-        versionName = "1.9-plus"
+        versionCode = 12
+        versionName = "2.0"
         applicationIdSuffix = ".restart"
     }
 
+    // Fixed signing key so every build installs as an update over the last.
+    // The key file is in the repo but encrypted; its password comes from the
+    // KEYSTORE_PASSWORD secret in GitHub Actions. Without it (e.g. a local
+    // build) the normal per-machine debug key is used instead.
+    val keystorePassword: String? = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotEmpty() }
+    signingConfigs {
+        create("fixed") {
+            storeFile = rootProject.file("signing/release.p12")
+            storeType = "PKCS12"
+            storePassword = keystorePassword
+            keyAlias = "microtimer"
+            keyPassword = keystorePassword
+        }
+    }
+
     buildTypes {
+        debug {
+            if (keystorePassword != null)
+                signingConfig = signingConfigs.getByName("fixed")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
