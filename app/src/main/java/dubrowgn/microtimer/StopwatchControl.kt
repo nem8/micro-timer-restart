@@ -20,7 +20,7 @@ import dubrowgn.microtimer.ui.ext.*
 // closed or the screen rotating/recreating.
 class StopwatchControl(context: Context) : LinearLayout(context) {
     var onConvert: ((Dec6Duration) -> Unit)? = null
-    var onThemeToggle: (() -> Unit)? = null
+    var onInfo: (() -> Unit)? = null
 
     private val prefs = context.getSharedPreferences("stopwatch", Context.MODE_PRIVATE)
     private val handler = Handler(Looper.getMainLooper())
@@ -105,26 +105,20 @@ class StopwatchControl(context: Context) : LinearLayout(context) {
 
         addView(center)
 
-        // subtle light/dark theme toggle, styled like the clear/backspace keys
-        val btnTheme = Button(context)
+        // info button, same size as the delete button so the time is centred
+        // exactly above the input display; styled like the clear/backspace keys
+        val btnInfo = Button(context)
             .withLayout(LayoutParams(lp))
             .withBg(context.getDrawable(R.drawable.btn_selector))
             .withBgTint(context.getColor(R.color.background))
             .withFgTint(context.getColor(R.color.foreground))
-            .withFg(context.getDrawable(R.drawable.ico_theme))
+            .withFg(context.getDrawable(R.drawable.ico_info))
             .withFgGravity(Gravity.CENTER)
-            .withOnClick { onThemeToggle?.invoke() }
-        btnTheme.contentDescription = "Light or dark theme"
-        btnTheme.stateListAnimator = null
-        btnTheme.alpha = 0.6f
-        addView(btnTheme)
-
-        // invisible spacer so the time lines up with the timer rows above,
-        // which have two buttons on the right
-        val spacer = View(context)
-        spacer.layoutParams = LayoutParams(lp)
-        spacer.visibility = View.INVISIBLE
-        addView(spacer)
+            .withOnClick { onInfo?.invoke() }
+        btnInfo.contentDescription = "About and settings"
+        btnInfo.stateListAnimator = null
+        btnInfo.alpha = 0.6f
+        addView(btnInfo)
 
         // a start time from before a reboot is meaningless; drop it
         if (startMs > SystemClock.elapsedRealtime())

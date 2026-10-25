@@ -48,6 +48,15 @@ object ThemePref {
         }
     }
 
+    // the current setting, for display
+    fun label(context: Context): String {
+        return when (get(context)) {
+            DARK -> "Dark"
+            LIGHT -> "Light"
+            else -> "System"
+        }
+    }
+
     // Wrap the activity's base context so its resources use the chosen mode.
     fun wrap(base: Context): Context {
         val night = when (get(base)) {

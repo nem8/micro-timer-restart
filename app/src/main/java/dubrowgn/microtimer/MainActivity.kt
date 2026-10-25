@@ -24,7 +24,10 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
+import android.text.method.LinkMovementMethod
+import android.text.util.Linkify
 import androidx.core.view.children
 import androidx.room.Room
 import dubrowgn.microtimer.db.Alarm
@@ -138,6 +141,46 @@ class MainActivity : Activity() {
         return true
     }
 
+    private fun showInfo() {
+        val version = packageManager.getPackageInfo(packageName, 0).versionName
+
+        val text = "Micro Timer+ $version\n" +
+            "Created by nem\n" +
+            "https://github.com/nem8/micro-timer-restart\n\n" +
+            "Based on Micro Timer by Dustin Brown\n" +
+            "https://github.com/dubrowgn/micro-timer\n\n" +
+            "Released under the MIT License."
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("About")
+            .setMessage(text)
+            .setPositiveButton("Close", null)
+            .setNegativeButton("License") { _, _ -> showLicense() }
+            .setNeutralButton("Theme: ${ThemePref.label(this)}") { _, _ ->
+                Toast.makeText(this, ThemePref.cycle(this), Toast.LENGTH_SHORT).show()
+                recreate()
+            }
+            .create()
+        dialog.show()
+
+        // make the URLs tappable
+        dialog.findViewById<TextView>(android.R.id.message)?.let { tv ->
+            Linkify.addLinks(tv, Linkify.WEB_URLS)
+            tv.movementMethod = LinkMovementMethod.getInstance()
+        }
+    }
+
+    private fun showLicense() {
+        val text = resources.openRawResource(R.raw.license)
+            .bufferedReader().use { it.readText() }
+
+        AlertDialog.Builder(this)
+            .setTitle("MIT License")
+            .setMessage(text)
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
     override fun onDestroy() {
         debug("onDestroy()")
 
@@ -219,10 +262,7 @@ class MainActivity : Activity() {
 
         stopwatch = StopwatchControl(this)
         stopwatch.onConvert = { dur -> createTimer(dur) }
-        stopwatch.onThemeToggle = {
-            Toast.makeText(this, ThemePref.cycle(this), Toast.LENGTH_SHORT).show()
-            recreate()
-        }
+        stopwatch.onInfo = { showInfo() }
         findViewById<LinearLayout>(R.id.layoutStopwatch).addView(stopwatch)
 
         findViewById<Button>(R.id.btn0).setOnClickListener { onDigit(0u) }
